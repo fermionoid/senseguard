@@ -130,13 +130,19 @@ class RuleEngine:
                     count += len(severity_rules)
         return count
 
-    def scan_skill(self, skill_dir: str) -> Layer1Result:
-        """Run full Layer 1 scan on a skill directory."""
+    def scan_skill(self, skill_dir: str, exclude_scanner_code: bool = True) -> Layer1Result:
+        """Run full Layer 1 scan on a skill directory.
+        
+        Args:
+            skill_dir: Root directory of the skill to scan.
+            exclude_scanner_code: If True, skip 'rules' and 'scripts' directories.
+                                 (automatically True when scanning senseguard itself)
+        """
         result = Layer1Result()
         result.rules_loaded = self.total_rules
 
         # Collect all text files to scan
-        files_to_scan = self._collect_files(skill_dir)
+        files_to_scan = self._collect_files(skill_dir, exclude_scanner_code=exclude_scanner_code)
         result.files_scanned = len(files_to_scan)
 
         # Pattern matching on each file
@@ -148,18 +154,32 @@ class RuleEngine:
 
         return result
 
-    def _collect_files(self, skill_dir: str) -> List[str]:
-        """Collect all text files in the skill directory for scanning."""
+    def _collect_files(self, skill_dir: str, exclude_scanner_code: bool = True) -> List[str]:
+        """Collect all text files in the skill directory for scanning.
+        
+        Args:
+            skill_dir: Root directory of the skill to scan.
+            exclude_scanner_code: If True, skip 'rules' and 'scripts' directories
+                                 (used when scanning the scanner tool itself).
+        """
         text_extensions = {
             ".md", ".txt", ".yaml", ".yml", ".json", ".py", ".sh",
             ".bash", ".zsh", ".js", ".ts", ".rb", ".pl", ".lua",
             ".toml", ".ini", ".cfg", ".conf", ".xml", ".html",
             ".css", ".env", ".dockerfile",
         }
+        
+        # Directories to always skip
+        skip_dirs = {".git", "__pycache__", "cache", ".DS_Store", "node_modules"}
+        
+        # If scanning the scanner itself, also skip rules and scripts
+        if exclude_scanner_code:
+            skip_dirs.update({"rules", "scripts"})
+        
         files = []
         for root, dirs, filenames in os.walk(skill_dir):
             # Skip hidden directories and cache
-            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__" and d != "cache"]
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in skip_dirs]
             for fname in filenames:
                 fpath = os.path.join(root, fname)
                 ext = os.path.splitext(fname)[1].lower()
@@ -170,6 +190,25 @@ class RuleEngine:
                 elif fname == "SKILL.md":
                     files.append(fpath)
         return list(set(files))  # deduplicate
+
+    def _is_in_example_context(self, lines: List[str], line_num: int) -> bool:
+        """Check if a line is in an example/documentation context.
+        
+        Returns True if the line appears in a section describing examples of bad code,
+        marked by keywords like "catches", "detect", "example", "bad", etc.
+        """
+        # Look back up to 5 lines for context
+        context_start = max(0, line_num - 6)
+        context_lines = "".join(lines[context_start:line_num]).lower()
+        
+        example_markers = {
+            "catches what", "detects", "detects when", "detect:",
+            "example", "example:", "bad example", "malicious example",
+            "what not to do", "do not write", "avoid", "avoid:",
+            "shows how", "demonstrates", "illustration", "anti-pattern",
+        }
+        
+        return any(marker in context_lines for marker in example_markers)
 
     def _scan_file(self, file_path: str, result: Layer1Result):
         """Scan a single file against all loaded rules."""
@@ -207,6 +246,10 @@ class RuleEngine:
                     for line_num, line in enumerate(lines, start=1):
                         match = regex.search(line)
                         if match:
+                            # Skip if this is in an example/documentation context
+                            if self._is_in_example_context(lines, line_num):
+                                continue
+                            
                             result.pattern_findings.append(Finding(
                                 rule_id=rule.get("id", "UNKNOWN"),
                                 category=category,

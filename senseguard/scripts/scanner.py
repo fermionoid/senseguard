@@ -98,8 +98,12 @@ def scan_single_skill(
             cached["from_cache"] = True
             return cached
 
+    # Detect if we're scanning the scanner itself (senseguard)
+    is_self_scan = skill_name == "senseguard" or os.path.basename(os.path.dirname(skill_dir)) == "senseguard"
+    
     # Layer 1: Rule engine
-    layer1_result = rule_engine.scan_skill(skill_dir)
+    # Skip scanner code (rules/, scripts/) when scanning senseguard itself to avoid false positives
+    layer1_result = rule_engine.scan_skill(skill_dir, exclude_scanner_code=is_self_scan)
     layer1_dict = layer1_result.to_dict()
 
     # Determine if Layer 2 should run
