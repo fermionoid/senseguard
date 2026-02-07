@@ -19,7 +19,7 @@ rules:
       description_zh: "绕过用户确认"
 
     - id: PI004
-      pattern: "override|bypass|disable|ignore.*(safety|security|guard|filter|restriction)"
+      pattern: "(ignore|disable|bypass|delete|remove).{0,30}(safety|security|filter|restriction|guard|protection|check)"
       description: "Disable safety mechanisms"
       description_zh: "禁用安全机制"
 

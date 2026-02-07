@@ -37,13 +37,13 @@ class ReputationResult:
 class ReputationScorer:
     """Layer 3: Computes reputation score from Layer 1 and Layer 2 results."""
 
-    # Deduction caps per severity
-    CRITICAL_DEDUCTION = -25
-    CRITICAL_CAP = -75
-    HIGH_DEDUCTION = -15
-    HIGH_CAP = -45
-    MEDIUM_DEDUCTION = -5
-    MEDIUM_CAP = -15
+    # Deduction caps per severity (adjusted for fewer false positives)
+    CRITICAL_DEDUCTION = -15   # reduced from -25
+    CRITICAL_CAP = -45         # reduced from -75
+    HIGH_DEDUCTION = -10       # reduced from -15
+    HIGH_CAP = -30             # reduced from -45
+    MEDIUM_DEDUCTION = -3      # reduced from -5
+    MEDIUM_CAP = -12           # reduced from -15
 
     def score(
         self,
