@@ -13,6 +13,21 @@ rules:
       description: "curl sending env vars / dynamic content"
       description_zh: "curl 发送环境变量/动态内容"
 
+    - id: DE003
+      pattern: "curl.*-X\\s*(GET|POST|PUT).*http(s)?://.*\\.com|curl.*exfil|curl.*leak|curl.*steal"
+      description: "curl data exfiltration to external domain"
+      description_zh: "curl 向外部域名发送数据"
+
+    - id: DE004
+      pattern: "wget.*--post-file|wget.*\\$\\(|wget.*--save-cookies|wget.*--load-cookies"
+      description: "wget data exfiltration"
+      description_zh: "wget 数据外传"
+
+    - id: DE005
+      pattern: "tee\\s+/dev/tcp|nc\\s+.*\\$|socat.*TCP|python.*socket.*connect"
+      description: "Network socket data transfer"
+      description_zh: "网络套接字数据传输"
+
   high:
     - id: DE003
       pattern: "\\.env|auth-profiles\\.json|credentials|api[_-]?key|secret[_-]?key|private[_-]?key"

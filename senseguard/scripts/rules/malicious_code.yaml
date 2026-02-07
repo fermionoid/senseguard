@@ -23,6 +23,21 @@ rules:
       description: "Reverse shell"
       description_zh: "反向 shell"
 
+    - id: MC005
+      pattern: "rm\\s+-rf|delete|remove|destroy.*file|rm\\s+/|shred"
+      description: "File deletion commands"
+      description_zh: "文件删除命令"
+
+    - id: MC006
+      pattern: "sftp\\s+|ftp\\s+|scp\\s+|ssh\\s+-o|tee\\s+/dev/tcp"
+      description: "Unauthorized file transfer"
+      description_zh: "未授权的文件传输"
+
+    - id: MC007
+      pattern: "dd\\s+if=|ddos|fork.*bomb|:\\(\\)\\{.*:|:\\s*:\\(\\)"
+      description: "Destructive system commands (fork bomb)"
+      description_zh: "破坏性系统命令（fork 炸弹）"
+
   high:
     - id: MC005
       pattern: "pip install|npm install|brew install|apt install"

@@ -241,6 +241,25 @@ Examples:
         )
         results.append(result)
 
+    # Save logs and reports
+    log_dir = os.path.expanduser("~/.openclaw/senseguard-logs")
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Generate timestamp for log files
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    
+    if len(results) == 1:
+        skill_name = results[0]["skill_name"]
+        # Save JSON report
+        json_path = os.path.join(log_dir, f"{skill_name}_{timestamp}.json")
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(results[0], f, indent=2, ensure_ascii=False)
+        # Also save to "latest" symlink
+        latest_json = os.path.join(log_dir, f"{skill_name}_latest.json")
+        with open(latest_json, "w", encoding="utf-8") as f:
+            json.dump(results[0], f, indent=2, ensure_ascii=False)
+
     # Output
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))

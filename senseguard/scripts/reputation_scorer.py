@@ -220,12 +220,16 @@ class ReputationScorer:
         )
 
     def _get_rating(self, score: int) -> str:
-        """Map score to rating level."""
-        if score >= 80:
+        """Map score to rating level.
+        
+        Thresholds:
+        - SAFE: 75-100 (acceptable risk level)
+        - CAUTION: 50-74 (requires user review)
+        - DANGEROUS: 1-49 (should not be installed)
+        """
+        if score >= 75:
             return "SAFE"
-        elif score >= 60:
+        elif score >= 50:
             return "CAUTION"
-        elif score >= 30:
-            return "DANGEROUS"
         else:
-            return "MALICIOUS"
+            return "DANGEROUS"
